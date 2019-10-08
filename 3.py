@@ -1,35 +1,33 @@
-from __future__ import absolute_import, division, print_function, unicode_literals
+import quandl
+import numpy as np 
+from sklearn.linear_model import LinearRegression
+from sklearn.svm import SVR
+from sklearn.model_selection import train_test_split
+# Get the stock data
+df = quandl.get("WIKI/AMZN")
+# Take a look at the data
+# Get the Adjusted Close Price 
+df = df[['Adj. Close']] 
+# A variable for predicting 'n' days out into the future
+forecast_out = 30 #'n=30' days
+#Create another column (the target ) shifted 'n' units up
+df['Prediction'] = df[['Adj. Close']].shift(-forecast_out)
+#print the new data set
+print(df.tail())
+X = np.array(df.drop(['Prediction'],1))
 
-import os
-
-import tensorflow as tf
-from tensorflow import keras
-
-
-import numpy as np
-
-import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
-zip_file = tf.keras.utils.get_file(origin="https://storage.googleapis.com/mledu-datasets/cats_and_dogs_filtered.zip",
-                                   fname="cats_and_dogs_filtered.zip", extract=True)
-base_dir, _ = os.path.splitext(zip_file)
-
-train_dir = os.path.join(base_dir, 'train')
-validation_dir = os.path.join(base_dir, 'validation')
-
-# Directory with our training cat pictures
-train_cats_dir = os.path.join(train_dir, 'cats')
-print ('Total training cat images:', len(os.listdir(train_cats_dir)))
-
-# Directory with our training dog pictures
-train_dogs_dir = os.path.join(train_dir, 'dogs')
-print ('Total training dog images:', len(os.listdir(train_dogs_dir)))
-
-# Directory with our validation cat pictures
-validation_cats_dir = os.path.join(validation_dir, 'cats')
-print ('Total validation cat images:', len(os.listdir(validation_cats_dir)))
-
-# Directory with our validation dog pictures
-validation_dogs_dir = os.path.join(validation_dir, 'dogs')
-print ('Total validation dog images:', len(os.listdir(validation_dogs_dir)))
+#Remove the last '30' rows
+X = X[:-forecast_out]
+print(X)
+### Create the dependent data set (y)  #####
+# Convert the dataframe to a numpy array 
+y = np.array(df['Prediction'])
+# Get all of the y values except the last '30' rows
+y = y[:-forecast_out]
+print(y)
+# Split the data into 80% training and 20% testing
+x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+# Create and train the Support Vector Machine (Regressor) 
+svr_rbf = SVR(kernel='rbf', C=1e3, gamma=0.1) 
+svr_rbf.fit(x_train, y_train)
 
